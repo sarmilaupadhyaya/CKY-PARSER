@@ -1,23 +1,33 @@
 import nltk
+import argparse
 
 
+def read_grammar(cfg_path):
+    """
+    """
+    data = open(cfg_path, "r").read()
+    grammar = nltk.CFG.fromstring(data)
+    return grammar
 
-
-s = grammar_original.productions()
-start_symbol = grammar_original.start()
-cnf_form = []
 def is_unit(production):
+    """
+    """
     
     if len(production)==1 and production.is_nonlexical():
         return True
     else:
         return False
-    
+
+
 def is_null(production):
+    """
+    """
     return True
 
-def has_start_symbol(production):
-    
+
+def has_start_symbol(production, start_symbol):
+    """
+    """
     if  start_symbol in production.rhs():
         return True
     else:
@@ -37,10 +47,11 @@ def useless_production():
     return useless_non_terminals
 
                     
-def replacing_start_symbol(productions):
-    
+def replacing_start_symbol(productions, start_symbol):
+    """
+    """
     for production in productions:
-        if has_start_symbol(production):
+        if has_start_symbol(production, start_symbol):
             
             return True
         else:
@@ -48,7 +59,8 @@ def replacing_start_symbol(productions):
            
 
 def removing_unit_production(grammar):
-    
+    """
+    """
     productions = grammar.productions()
     new_productions = []
     replacing_prod=[]
@@ -130,22 +142,30 @@ def making_binary(new_grammar):
     return nltk.grammar.CFG(new_grammar.start(),new_productions)
     
     
-def to_cnf():
+def to_cnf(cfg_path):
     """
     """
-
-    has_start_symbol = replacing_start_symbol(s)
-
+    cfg_grammar = read_grammar(cfg_path)
+    productions = cfg_grammar.productions()
+    start_symbol = cfg_grammar.start()
+    has_start_symbol = replacing_start_symbol(productions, start_symbol)
+   
     if has_start_symbol:
-        s.append(nltk.grammar.Nonterminal("S0_SIGMA"),[start_symbol])
+        productions.append(nltk.grammar.Nonterminal("S0_SIGMA"),[start_symbol])
         start_symbol = nltk.grammar.Nonterminal("S0_SIGMA")
 
-    new_grammar = nltk.grammar.CFG(start=start_symbol, productions=s)
+    new_grammar = nltk.grammar.CFG(start=start_symbol, productions=productions)
     new_grammar = making_binary(new_grammar)
     new_grammar = replacing_terminals(new_grammar)
     new_grammar = removing_unit_production(new_grammar)
+    return new_grammar
 
 
-if __name__()==__main__:
+if __name__=='__main__':
 
-    to_cnf()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-cfg", "--cfg_path", required=True)
+    args = parser.parse_args()
+    print(args.cfg_path)
+    new_grammar = to_cnf(args.cfg_path)
+    print("The new cnf has " + str(len(new_grammar.productions())) + " productions rules")
